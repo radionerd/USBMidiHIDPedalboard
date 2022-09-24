@@ -342,6 +342,10 @@ void setup() {
         break;
       }
   }
+  // Test Shift register driven LED background glow
+  for ( int i = 0 ; i <  sizeof( MAX_SCANNED_GPIO  + SHIFT_REGISTER_BITS ) ; i++ ) {
+     ScanImage[ i ].LastOutput = 1 ;
+  }
   digitalWrite(LED_BUILTIN, HIGH ); // Exit with defined LED behaviour
 }
 
@@ -437,7 +441,9 @@ void IOScan (void ) {
         op_sr_data = pin[gpioId].portPin;
         break;
       case IP_SR_DATA :
-        if ( TRUE ) { // Perform shift registerscan at modest rate
+        static int sr_skip = 0;
+        if ( sr_skip++ >= 3 ) { // Perform shift registerscan at modest rate
+          sr_skip=0;
           // Triple scan of 96 shift register outputs measured as 740us without any optimisation
           ip_sr_data = pin[gpioId].portPin;
           if ( ip_sr_data && op_sr_data && op_sr_clock ) { // All 3 connections present?
@@ -448,14 +454,17 @@ void IOScan (void ) {
                digitalWrite( op_sr_clock, LOW );
             }
             // search for changes in button status & update
+            int change = 0;
+            int input;
             digitalWrite( op_sr_data, HIGH );
             for ( int i = 0 ; i <  num_sr_clocks ; i++ ) {
                digitalWrite( op_sr_clock, HIGH );
                digitalWrite( op_sr_clock, LOW );
                digitalWrite( op_sr_data , LOW ); // only required after 1st clock
-               int input = digitalRead( ip_sr_data );
+               input = digitalRead( ip_sr_data );
                if ( ScanImage[scanId+i].LastInput != input ){
-                 InputChange( scanId+i , input );
+                 change = scanId+i; // record change for later update to avoid SR LEDs blinking out during USB update
+                 break;
                }
             }
             // load shift registers with LED status
@@ -464,6 +473,9 @@ void IOScan (void ) {
                digitalWrite( op_sr_clock, HIGH );
                digitalWrite( op_sr_clock, LOW );
                digitalWrite( op_sr_data, ScanImage[ scanId + num_sr_clocks - i - 2 ].LastOutput );
+            }
+            if ( change ) {
+                 InputChange( change , input );
             }
           }
         }
