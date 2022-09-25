@@ -1,0 +1,182 @@
+[
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/cores/maple"
+  },
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/variants/generic_stm32f103c"
+  },
+  {
+    "Sourcefile": "/tmp/arduino_build_437602/sketch/USBMidiHidPedalBoard.ino.cpp",
+    "Include": "USBComposite.h",
+    "Includepath": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/libraries/USBComposite"
+  },
+  {
+    "Sourcefile": "/tmp/arduino_build_437602/sketch/USBMidiHidPedalBoard.ino.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/libraries/USBComposite/AbsMouse.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/libraries/USBComposite/Consumer.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/libraries/USBComposite/Digitizer.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/libraries/USBComposite/HIDReports.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/libraries/USBComposite/Joystick.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/libraries/USBComposite/Keyboard.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/libraries/USBComposite/MinSysex.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/libraries/USBComposite/Mouse.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/libraries/USBComposite/USBAudio.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/libraries/USBComposite/USBComposite.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/libraries/USBComposite/USBCompositeSerial.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/libraries/USBComposite/USBHID.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/libraries/USBComposite/USBMIDI.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/libraries/USBComposite/USBMassStorage.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/libraries/USBComposite/USBMultiSerial.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/libraries/USBComposite/USBMultiXBox360.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/libraries/USBComposite/USBXBox360Reporter.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/libraries/USBComposite/USBXBox360W.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/libraries/USBComposite/usb_audio.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/libraries/USBComposite/usb_composite_serial.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/libraries/USBComposite/usb_generic.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/libraries/USBComposite/usb_hid.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/libraries/USBComposite/usb_mass.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/libraries/USBComposite/usb_mass_mal.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/libraries/USBComposite/usb_midi_device.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/libraries/USBComposite/usb_multi_serial.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/libraries/USBComposite/usb_multi_x360.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/libraries/USBComposite/usb_scsi.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/libraries/USBComposite/usb_scsi_data.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/libraries/USBComposite/usb_setup.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/libraries/USBComposite/usb_x360_generic.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/libraries/USBComposite/usb_x360w.c",
+    "Include": "",
+    "Includepath": null
+  }
+]

@@ -1,0 +1,49 @@
+-------------------------
+Sam.mk Configuration:
+- [AUTODETECTED]       CURRENT_OS = LINUX 
+- [USER]               ARDUINO_DIR = /home/richard/Arduino 
+- [AUTODETECTED]       PYTHON_CMD = /usr/bin/python3 
+- [AUTODETECTED]       ARDUINO_PACKAGE_DIR = /home/richard/.arduino15/packages (from DEFAULT)
+- [USER]               CMSIS_DIR = /home/richard/.arduino15/packages/per1234/hardware/sam/1.6.11-arm64/system/CMSIS 
+- [AUTODETECTED]       CMSIS_ATMEL_DIR = /home/richard/.arduino15/packages/arduino/tools/CMSIS-Atmel//CMSIS (from ARDUINO_PACKAGE_DIR)
+- [COMPUTED]           ARDUINO_PLATFORM_LIB_PATH = /home/richard/Arduino/hardware/Arduino_STM32/STM32F1/cores/maple/libraries (from ARDUINO_PACKAGE_DIR)
+- [COMPUTED]           ARM_TOOLS_DIR = /home/richard/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/7-2017q4 (from ARDUINO_PACKAGE_DIR)
+- [COMPUTED]           UPLOAD_TOOL = maple_upload 
+- [AUTODETECTED]       BOSSA = /home/richard/.arduino15/packages/arduino/tools/bossac/1.7.0-arduino3/bossac (from ARDUINO_PACKAGE_DIR)
+-------------------------
+Arduino.mk Configuration:
+- [USER]               ARDMK_DIR = /home/richard/Projects/Arduino-Makefile 
+- [DEFAULT]            ARDUINO_VERSION = 100 
+- [USER]               ARCHITECTURE = samd 
+- [USER]               ARDMK_VENDOR = arduino 
+- [USER]               ARDUINO_SKETCHBOOK = /home/richard/Projects/PedalBoard/Firmware/USBMidiHidPedalBoard 
+- [USER]               ALTERNATE_CORE = Arduino_STM32 
+- [COMPUTED]           ALTERNATE_CORE_PATH = /home/richard/Arduino/hardware/Arduino_STM32/STM32F1/cores/maple  (from ARDUINO_SKETCHBOOK and ALTERNATE_CORE)
+- [COMPUTED]           ARDUINO_VAR_PATH = /home/richard/Arduino/hardware/Arduino_STM32/STM32F1/cores/maple/variants (from ALTERNATE_CORE_PATH)
+- [USER]               AVR_TOOLS_DIR = /home/richard/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/7-2017q4 
+- [COMPUTED]           ARDUINO_LIB_PATH = /home/richard/Arduino/libraries (from ARDUINO_DIR)
+- [USER]               ARDUINO_PLATFORM_LIB_PATH = /home/richard/Arduino/hardware/Arduino_STM32/STM32F1/cores/maple/libraries 
+- [DEFAULT]            USER_LIB_PATH = /home/richard/Projects/PedalBoard/Firmware/USBMidiHidPedalBoard/libraries (in user sketchbook)
+- [DEFAULT]            PRE_BUILD_HOOK = pre-build-hook.sh 
+- [USER]               BOARD_SUB = STM32F103C8 
+- [USER]               BOARD_TAG = genericSTM32F103C 
+- [COMPUTED]           CORE = maple (from build.core)
+- [USER]               VARIANT = generic_stm32f103c 
+- [COMPUTED]           BOARD = GENERIC_STM32F103C (from build.board)
+- [COMPUTED]           OBJDIR = build-genericSTM32F103C-STM32F103C8 (from BOARD_TAG)
+- [USER]               ARDUINO_CORE_PATH = /home/richard/Arduino/hardware/Arduino_STM32/STM32F1/cores/maple/cores/arduino 
+- [COMPUTED]           RESET_CMD = /usr/bin/python3 /home/richard/Projects/Arduino-Makefile/bin/ard-reset-arduino --zero  (from PYTHON_CMD, ARD_RESET_OPTS and MONITOR_PORT)
+- [ASSUMED]            MONITOR_BAUDRATE = 9600 
+- [DEFAULT]            OPTIMIZATION_LEVEL = s 
+- [USER]               MCU_FLAG_NAME = mcpu 
+- [USER]               CFLAGS_STD = -std=gnu11 
+- [DEFAULT]            CXXFLAGS_STD = -std=gnu++11 
+- [AUTODETECTED]       DEVICE_PATH =  
+- [DEFAULT]            FORCE_MONITOR_PORT =  
+- [AUTODETECTED]       Size utility: ARM
+- [USER]               BOOTLOADER_PARENT = /home/richard/Arduino/hardware/Arduino_STM32/STM32F1/cores/maple/bootloaders 
+- [COMPUTED]           ARDMK_VERSION = 1.6 
+- [COMPUTED]           CC_VERSION = 7.2.1 (arm-none-eabi-gcc)
+-------------------------
+mkdir -p build-genericSTM32F103C-STM32F103C8
+/home/richard/.arduino15/packages/arduino/tools/arm-none-eabi-gcc/7-2017q4/bin/arm-none-eabi-g++ -x c++ -include Arduino.h -MMD -c -D__PROG_TYPES_COMPAT__ -I/home/richard/Arduino/libraries/USBHID  -I/home/richard/.arduino15/packages/per1234/hardware/sam/1.6.11-arm64/system/CMSIS/Include/ -I/home/richard/.arduino15/packages/arduino/tools/CMSIS-Atmel//CMSIS/Device/ATMEL -DMD -DUSBCON '-DUSB_PRODUCT=' '-DUSB_MANUFACTURER="Unknown"'  -DUSB_VID= -DUSB_PID= -mthumb -nostdlib --param max-inline-insns-single=500 -fno-exceptions -Wl,-Map=build-genericSTM32F103C-STM32F103C8/USBMidiHidPedalBoard_.map -mcpu=cortex-m3 -DF_CPU= -DARDUINO=100 -DARDUINO_GENERIC_STM32F103C -DARDUINO_ARCH_SAMD "-DARDUINO_BOARD=\"GENERIC_STM32F103C\"" "-DARDUINO_VARIANT=\"generic_stm32f103c\"" -I/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/cores/maple/cores/arduino -I/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/cores/maple/cores/arduino/api -I/home/richard/Arduino/hardware/Arduino_STM32/STM32F1/cores/maple/variants/generic_stm32f103c    -Wall -ffunction-sections -fdata-sections -Os -fno-rtti -fno-threadsafe-statics -std=gnu++11 -fpermissive -fno-exceptions -std=gnu++11 -fdiagnostics-color=always USBMidiHidPedalBoard.ino -o build-genericSTM32F103C-STM32F103C8/USBMidiHidPedalBoard.ino.o

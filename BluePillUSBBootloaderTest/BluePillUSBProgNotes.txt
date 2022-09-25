@@ -1,0 +1,35 @@
+  Blue Pill Maple Bootloader
+  
+  1. Install stm32 board manager and tools :
+  Select file -> preferences -> Additional Board Manager URL:
+    https://github.com/stm32duino/BoardManagerFiles/raw/main/package_stmicroelectronics_index.json
+  Select Tools -> Boards -> Board Manager
+  Search for "STM32 MCU" and install latest version
+  Select Tools -> Board Part Number -> Blue Pill F103C8
+  
+  2. Downlaod a suitable bootloader and install in Blue Pill using stlink V2 programmer via 4 wire lead.
+  https://github.com/rogerclarkmelbourne/STM32duino-bootloader/blob/master/binaries/generic_boot20_pc13.bin
+  Install the bootloader onto the Blue Pill
+  ./stlink_upload /home/richard/Downloads/generic_boot20_pc13.bin 
+  
+  3. Test
+  Close Arduino app
+  Edit write port number into preferences file
+  ~/.arduino15/preferences.txt
+  serial.port=/dev/ttyACM0
+  Restart the Arduino app
+  Select Tools -> Upload Method -> Maple DFU Bootloader 2.0
+  Connect the Blue Pill via USB
+  Load blink sketch and select sketch -> upload
+  You may need to press reset on the board to complete the load.
+  
+  Command line example: ./maple_upload.sh ttyACM0 2 1EAF:0003 Blink_R.ino.bin
+  
+  4. USB HID used for Midi uses: https://github.com/rogerclarkmelbourne/Arduino_STM32
+     Download and extract zip, rename the folder from Arduino_stm32-master to Arduino_STM32
+     Copy to ~/Arduino/hardware/Arduino_STM32
+     Select board in Tools -> Board: -> STM32F1Boards... -> Generic STM32F103C series
+     Problems uploading on 64 bit: 
+     In folder ~/Arduino/hardware/tools, rename linux to linux32, ln -s linux64 linux
+     Consider replacing dfu-utils v0.7 with version 0.8 from 1. above 
+     

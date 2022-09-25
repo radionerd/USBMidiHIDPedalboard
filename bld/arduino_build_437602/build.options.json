@@ -1,0 +1,12 @@
+{
+  "additionalFiles": "..,..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..,../../..",
+  "builtInLibrariesFolders": "/home/richard/Downloads/arduino-1.8.19/libraries",
+  "builtInToolsFolders": "/home/richard/Downloads/arduino-1.8.19/tools-builder,/home/richard/Downloads/arduino-1.8.19/hardware/tools/avr,/home/richard/.arduino15/packages",
+  "compiler.optimization_flags": "",
+  "customBuildProperties": "build.warn_data_percentage=75",
+  "fqbn": "Arduino_STM32:STM32F1:genericSTM32F103C:device_variant=STM32F103C8,upload_method=DFUUploadMethod,cpu_speed=speed_72mhz,opt=osstd",
+  "hardwareFolders": "/home/richard/Downloads/arduino-1.8.19/hardware,/home/richard/.arduino15/packages,/home/richard/Arduino/hardware",
+  "otherLibrariesFolders": "/home/richard/Arduino/libraries",
+  "runtime.ide.version": "10819",
+  "sketchLocation": "/home/richard/Projects/PedalBoard/Firmware/USBMidiHidPedalBoard/USBMidiHidPedalBoard.ino"
+}
