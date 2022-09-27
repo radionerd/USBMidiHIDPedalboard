@@ -66,10 +66,7 @@ enum PinFunction {
  IO_RESERVED, /* Used by Blue pill board for debug or boot, available for use as GPIO with some complications */
  OP_SCAN,
  IP_SCAN,
- IP_ADC_CH1,
- IP_ADC_CH2,
- IP_ADC_CH3,
- IP_ADC_CH4,
+ IP_ADC,
  IP_ADC_LED_DIM,
  OP_SR_CLOCK,
  OP_SR_DATA,
@@ -86,14 +83,14 @@ const struct GPIOPinAssignment pin[]  = {
   { PC13, IO_RESERVED },    // PCB LED active low. Sink max 3mA, Source 3mA, Not 5V Tolerant
   { PC14, IP_SCAN  },       // IP1  Sink max 3mA, Source 3mA, Not 5V Tolerant 
   { PC15, IP_SCAN  },       // IP2  Sink max 3mA, Source 3mA, Not 5V Tolerant 
-  { PA0,  IP_ADC_CH1,  7 }, // Expression Shoe Swell / Crescendo, 3rd param is midi cc command number 
-  { PA1,  IP_ADC_CH1, 10 }, // Expression Shoe Swell / Crescendo 
-  { PA2,  IP_ADC_CH1, 11 }, // Expression Shoe Swell / Crescendo 
-  { PA3,  IP_ADC_CH1, 12 }, // Expression Shoe Swell / Crescendo
-  { PA4,  IP_ADC_LED_DIM }, // LED Brightness
-  { PA5,  IO_SPARE },
-  { PA6,  IO_SPARE },
-  { PA7,  IO_SPARE },
+  { PA0,  IP_ADC }, // Expression Shoe Swell / Crescendo, 3rd param is midi cc command number 
+  { PA1,  IP_ADC }, // Expression Shoe Swell / Crescendo 
+  { PA2,  IP_ADC }, // Expression Shoe Swell / Crescendo 
+  { PA3,  IP_ADC }, // Expression Shoe Swell / Crescendo
+  { PA4,  IP_ADC }, // LED Brightness
+  { PA5,  IP_ADC },
+  { PA6,  IP_ADC },
+  { PA7,  IP_ADC },
   { PB0,  IP_SCAN  }, // IP3
   { PB1,  IP_SCAN  }, // IP4
   { PB10, IP_SCAN  }, // IP5
@@ -133,16 +130,33 @@ enum Command {
  MIDI_NOTE_TOGGLE_CH2,
  MIDI_NOTE_TOGGLE_CH3,
  MIDI_NOTE_TOGGLE_CH4, 
- MIDI_CC, // Unused for now, midi cc messages sent by adc
- MIDI_PC, // Unused for now
+ MIDI_CC_CH1, // midi control change messages sent by adc
+ MIDI_CC_CH2,
+ MIDI_CC_CH3,
+ MIDI_CC_CH4,
+ MIDI_PC_CH1, // Unused for now
+ MIDI_PC_CH2, // Unused for now
+ MIDI_PC_CH3, // Unused for now
+ MIDI_PC_CH4, // Unused for now
  HID_PAGE_TURNER
  };
   
 struct Image { int LastInput; unsigned long LastTime; int LastOutput; };
 const int MAX_SCANNED_GPIO = 6 * 7 ; // 6 inputs , 7 outputs
-struct Image ScanImage[MAX_SCANNED_GPIO  + SHIFT_REGISTER_BITS];
+const int NUM_ADC_INPUTS = 8;
+struct Image ScanImage[NUM_ADC_INPUTS + MAX_SCANNED_GPIO  + SHIFT_REGISTER_BITS];
 struct ScanAssociations { int command ; int value ; };
-const struct ScanAssociations ScanParams [ MAX_SCANNED_GPIO + SHIFT_REGISTER_BITS ] = {
+const struct ScanAssociations ScanParams [ NUM_ADC_INPUTS + MAX_SCANNED_GPIO + SHIFT_REGISTER_BITS ] = {
+
+ { MIDI_CC_CH1,1 } , // ADC
+ { MIDI_CC_CH1,2 } , // ADC
+ { MIDI_CC_CH1,3 } , // ADC
+ { MIDI_CC_CH1,4 } , // ADC
+ { MIDI_CC_CH1,5 } , // ADC
+ { MIDI_CC_CH1,6 } , // ADC
+ { MIDI_CC_CH1,7 } , // ADC
+ { MIDI_CC_CH1,8 } , // ADC
+ 
 
  // Scan OP 1, 6 inputs
  { MIDI_NOTE_CH1, 36 } , /*  1 C1 Pedal */
@@ -373,8 +387,7 @@ void setup() {
         case IP_CONTACT :
           pinMode( pin[gpio_id].portPin, INPUT_PULLDOWN );
         break;
-        case IP_ADC_CH1 :
-        case IP_ADC_CH2 :
+        case IP_ADC :
           pinMode( pin[gpio_id].portPin, INPUT );
           // Todo: Trigger pot value send at power up?
         break;
@@ -425,13 +438,10 @@ void IOScan (void ) {
     switch ( pin[gpioId].func ) {
       case IP_SCAN : // All inputs are scanned by their associated output lines
       break;
-      case IP_ADC_CH1 :
-      case IP_ADC_CH2 :
-      case IP_ADC_CH3 :
-      case IP_ADC_CH4 :
+      case IP_ADC :
       {
-        if ( ( time_now % 100 ) == 0 ) { // 100ms interval sampling for 50Hz/60Hz hum rejection
-         int new_value = analogRead( pin[adcId].portPin ); // a value between 0-4095
+        /* if ( ( time_now % 100 ) == 0 ) */ { // 100ms interval sampling for 50Hz/60Hz hum rejection
+         int new_value = analogRead( pin[gpioId].portPin ); // a value between 0-4095
          // If difference between new_value and old_value is grater than threshold
          // if ((new_value > adcHistory[adcId].value && new_value - adcHistory[adcId].value > threshold) ||
          //    (new_value < adcHistory[adcId].value && adcHistory[adcId].value - new_value > threshold)) {
@@ -439,16 +449,17 @@ void IOScan (void ) {
           if ( ( time_now - adcHistory[adcId].timeStamp ) > DEBOUNCE_TIME_MS ) {
             adcHistory[adcId].value = new_value;
             adcHistory[adcId].timeStamp = time_now;
-            int midi_channel = ( pin[gpioId].func - IP_ADC_CH1 ) & 0xF ;
-            int cc_command = pin[gpioId].ccCommand;
+            int midi_channel = ( ScanParams[scanId].command - MIDI_CC_CH1 ) & 0xF ;
+            int cc_command_number = ScanParams[scanId].value;
             digitalWrite(LED_BUILTIN, HIGH ); // Indicate USB signalling PCB LED OFF
-            midi.sendControlChange(midi_channel,cc_command, new_value/32 ); // Range 0-127. May need adjustment depending on swell pedal shoe geometry
+            midi.sendControlChange(midi_channel,cc_command_number, new_value/32 ); // Range 0-127. May need adjustment depending on swell pedal shoe geometry
             digitalWrite(LED_BUILTIN, LOW );
             adcHistory[adcId].value = new_value;
           }
          }
         }
         adcId++;
+        scanId++;
       }
       break;
       case IP_CONTACT :
