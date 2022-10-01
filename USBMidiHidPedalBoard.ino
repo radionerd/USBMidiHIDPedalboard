@@ -1,4 +1,5 @@
 #include <USBComposite.h> // https://github.com/arpruss/USBComposite_stm32f1
+#include "TM1637.h" // Must RJ enhancments for displayPChar(char *)
 /*
  * USBMidiHidPedalBoard
  *
@@ -27,7 +28,7 @@ This project was conceived to connect controls to Virtual Pipe Organ software su
 - Hosted on the STM32 Blue Pill, a $2US development board
 - USB Connection to host computer, LED blink on USB send
 - Multiple STM32 boards may be deployed to ease wiring or increase capacity
-- Up to 156 contacts arranged as a 14 out by 12 in diode switch matrix
+- 36 scanned contacts arranged as a 6 out by 6 in diode switch matrix
 - Contacts may send Midi Note On/Off messages for pedalboard, stops, couplers or toe pistons
 - Contacts may instead send Keyboard HID messages for turning music pages displayed on a host computer monitor
 - Page turning may use a single sustain pedal type contact e.g. short press forward, long press back.
@@ -36,12 +37,23 @@ This project was conceived to connect controls to Virtual Pipe Organ software su
 - Active High Outputs for the best noise immunity connect to inputs via a diode and switch: 
      Output-----|>|----SW----Input
 ## Current Configuration
--  8 ADC inputs mapped to Channel 5 Midi CC 20-27 values 0-127 for expression pedals and LED dimming
-- 36 Pedalboard inputs in 6x6 matrix mapped to Midi Channel 3 Note 36-67 (C2-G4) and 4 HID keybd buttons for page turning
-- 96 Button & LED Shift register IO's mapped to Midi Channels 5-8 Notes 1-24 for pistons and stops
+- 36 Pedalboard inputs in 6x6 matrix mapped to Midi Channel 3/4 Note 36-67 (C2-G4) and 4 HID keybd buttons for page turning
+- 96 Button & LED Shift register IO's mapped to Midi Channels 5-8 Notes 1-24 for pistons or stops
+-  8 Filter ADC inputs are mapped to Channel 9 Midi CC 20-27 values 0-127 for expression pedals and LED dimming
+
+## Initial Midi Channel Assignments
+
+Initial midi channel assignments are readily altered by editing constant arrays.
+
+|         |Notes|Pistons|Expression|
+| :---:   |:---:| :---: |  :---:   |
+| Manual1 |  1  |   5   |          |
+| Manual2 |  2  |   6   |          |
+| Manual3 |  3  |   7   |          |
+| Pedal   |  4  |   8   |     9    |
 
 ### *** RE-PROGRAMMING ***
- * If the firmware is configured to use the reserved gpio pins the Blue Pill tricky to re-program.
+ * If the firmware is configured to use the reserved gpio pins the Blue Pill may be tricky to re-program.
  * To re-program if you have problems:
  * 1. Set Boot0 Link to position 1
  * 2. Press reset
@@ -56,7 +68,7 @@ This project was conceived to connect controls to Virtual Pipe Organ software su
 The code is based on the excellent examples from: https://github.com/arpruss/USBComposite_stm32f1/tree/master/examples
 Also thanks to the Arduino and STM32 support teams
 # License
-GPL V3 or later 
+MIT
 */
  
 #define LED_BUILT_IN PC13; // LED illuminates on LOW
@@ -138,7 +150,7 @@ enum Command {
 
 enum Channel { CH1 = 0, CH2,CH3,CH4,CH5,CH6,CH7,CH8,CH9,CH10,CH11,CH12,CH13,CH14,CH15,CH16 };
 
-struct Image { int LastInput; unsigned long LastTime; int LastOutput; };
+struct Image { int Input; unsigned long Time; int Output; int Error; };
 const int MAX_SCANNED_GPIO = 6 * 7 ; // 6 inputs , 7 outputs
 const int NUM_ADC_INPUTS = 8;
 const int TOTAL_INPUTS = NUM_ADC_INPUTS + MAX_SCANNED_GPIO  + SHIFT_REGISTER_BITS;
@@ -146,14 +158,14 @@ struct Image ScanImage[TOTAL_INPUTS];
 struct ScanAssociations { uint8_t command ; uint8_t channel; uint8_t value ; };
 const struct ScanAssociations ScanParams [ TOTAL_INPUTS ] = {
 
- { MIDI_CC, CH5, 20 } , // ADC
- { MIDI_CC, CH5, 21 } , // ADC
- { MIDI_CC, CH5, 22 } , // ADC
- { MIDI_CC, CH5, 23 } , // ADC
- { MIDI_CC, CH5, 24 } , // ADC
- { MIDI_CC, CH5, 25 } , // ADC
- { MIDI_CC, CH5, 26 } , // ADC
- { MIDI_CC, CH5, 27 } , // ADC
+ { MIDI_CC, CH9, 20 } , // ADC
+ { MIDI_CC, CH9, 21 } , // ADC
+ { MIDI_CC, CH9, 22 } , // ADC
+ { MIDI_CC, CH9, 23 } , // ADC
+ { MIDI_CC, CH9, 24 } , // ADC
+ { MIDI_CC, CH9, 25 } , // ADC
+ { MIDI_CC, CH9, 26 } , // ADC
+ { MIDI_CC, CH9, 27 } , // ADC
  
 
  // Scan OP 1, 6 inputs
@@ -199,7 +211,7 @@ const struct ScanAssociations ScanParams [ TOTAL_INPUTS ] = {
  { HID_PAGE_TURNER, KEY_DOWN_ARROW  } , // Long press Down arrow sends next command eg HOME
  { HID_PAGE_TURNER, KEY_HOME  } ,
  // Shift register config for 3 shift registers per division
- // Division 1 Great
+ // Manual 1
  { MIDI_NOTE,  CH5, 1 } , // Stops and thumb pistons
  { MIDI_NOTE,  CH5, 2 } , 
  { MIDI_NOTE,  CH5, 3 } , 
@@ -218,91 +230,91 @@ const struct ScanAssociations ScanParams [ TOTAL_INPUTS ] = {
  { MIDI_NOTE,  CH5, 15 } , 
  { MIDI_NOTE,  CH5, 16 } , 
  
- { MIDI_NOTE_TOGGLE,  CH5, 17 } , 
- { MIDI_NOTE_TOGGLE,  CH5, 18 } , 
- { MIDI_NOTE_TOGGLE,  CH5, 19 } ,
- { MIDI_NOTE_TOGGLE,  CH5, 20 } , 
- { MIDI_NOTE_TOGGLE,  CH5, 21 } , 
- { MIDI_NOTE_TOGGLE,  CH5, 22 } , 
- { MIDI_NOTE_TOGGLE,  CH5, 23 } , 
- { MIDI_NOTE_TOGGLE,  CH5, 24 } , // Next midi note above the highest on 61 key keyboards
- // Division 2 Swell
- { MIDI_NOTE_TOGGLE,  CH6, 1 } ,
- { MIDI_NOTE_TOGGLE,  CH6, 2 } , 
- { MIDI_NOTE_TOGGLE,  CH6, 3 } , 
- { MIDI_NOTE_TOGGLE,  CH6, 4 } , 
- { MIDI_NOTE_TOGGLE,  CH6, 5 } ,
- { MIDI_NOTE_TOGGLE,  CH6, 6 } , 
- { MIDI_NOTE_TOGGLE,  CH6, 7 } , 
- { MIDI_NOTE_TOGGLE,  CH6, 8 } , 
+ { MIDI_NOTE,  CH5, 17 } , 
+ { MIDI_NOTE,  CH5, 18 } , 
+ { MIDI_NOTE,  CH5, 19 } ,
+ { MIDI_NOTE,  CH5, 20 } , 
+ { MIDI_NOTE,  CH5, 21 } , 
+ { MIDI_NOTE,  CH5, 22 } , 
+ { MIDI_NOTE,  CH5, 23 } , 
+ { MIDI_NOTE,  CH5, 24 } , // Next midi note above the highest on 61 key keyboards
+ // Manual 2
+ { MIDI_NOTE,  CH6, 1 } ,
+ { MIDI_NOTE,  CH6, 2 } , 
+ { MIDI_NOTE,  CH6, 3 } , 
+ { MIDI_NOTE,  CH6, 4 } , 
+ { MIDI_NOTE,  CH6, 5 } ,
+ { MIDI_NOTE,  CH6, 6 } , 
+ { MIDI_NOTE,  CH6, 7 } , 
+ { MIDI_NOTE,  CH6, 8 } , 
  
- { MIDI_NOTE_TOGGLE,  CH6, 9 } ,
- { MIDI_NOTE_TOGGLE,  CH6, 10 } , 
- { MIDI_NOTE_TOGGLE,  CH6, 11 } , 
- { MIDI_NOTE_TOGGLE,  CH6, 12 } , 
- { MIDI_NOTE_TOGGLE,  CH6, 13 } , 
- { MIDI_NOTE_TOGGLE,  CH6, 14 } , 
- { MIDI_NOTE_TOGGLE,  CH6, 15 } , 
- { MIDI_NOTE_TOGGLE,  CH6, 16 } , 
+ { MIDI_NOTE,  CH6, 9 } ,
+ { MIDI_NOTE,  CH6, 10 } , 
+ { MIDI_NOTE,  CH6, 11 } , 
+ { MIDI_NOTE,  CH6, 12 } , 
+ { MIDI_NOTE,  CH6, 13 } , 
+ { MIDI_NOTE,  CH6, 14 } , 
+ { MIDI_NOTE,  CH6, 15 } , 
+ { MIDI_NOTE,  CH6, 16 } , 
  
- { MIDI_NOTE_TOGGLE,  CH6, 17 } , 
- { MIDI_NOTE_TOGGLE,  CH6, 18 } , 
- { MIDI_NOTE_TOGGLE,  CH6, 19 } ,
- { MIDI_NOTE_TOGGLE,  CH6, 20 } , 
- { MIDI_NOTE_TOGGLE,  CH6, 21 } , 
- { MIDI_NOTE_TOGGLE,  CH6, 22 } , 
- { MIDI_NOTE_TOGGLE,  CH6, 23 } , 
- { MIDI_NOTE_TOGGLE,  CH6, 24 } , 
- // Division 3 Choir
- { MIDI_NOTE_TOGGLE,  CH7, 1 } ,
- { MIDI_NOTE_TOGGLE,  CH7, 2 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 3 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 4 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 5 } ,
- { MIDI_NOTE_TOGGLE,  CH7, 6 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 7 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 8 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 9 } ,
- { MIDI_NOTE_TOGGLE,  CH7, 10 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 11 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 12 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 13 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 14 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 15 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 16 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 17 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 18 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 19 } ,
- { MIDI_NOTE_TOGGLE,  CH7, 20 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 21 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 22 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 23 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 24 } , 
- // Division 4 pedalboard 
- { MIDI_NOTE_TOGGLE,  CH7, 1 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 2 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 3 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 4 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 5 } ,
- { MIDI_NOTE_TOGGLE,  CH7, 6 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 7 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 8 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 9 } ,
- { MIDI_NOTE_TOGGLE,  CH7, 10 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 11 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 12 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 13 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 14 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 15 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 16 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 17 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 18 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 19 } ,
- { MIDI_NOTE_TOGGLE,  CH7, 20 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 21 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 22 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 23 } , 
- { MIDI_NOTE_TOGGLE,  CH7, 24 } , 
+ { MIDI_NOTE,  CH6, 17 } , 
+ { MIDI_NOTE,  CH6, 18 } , 
+ { MIDI_NOTE,  CH6, 19 } ,
+ { MIDI_NOTE,  CH6, 20 } , 
+ { MIDI_NOTE,  CH6, 21 } , 
+ { MIDI_NOTE,  CH6, 22 } , 
+ { MIDI_NOTE,  CH6, 23 } , 
+ { MIDI_NOTE,  CH6, 24 } , 
+ // Manual 3
+ { MIDI_NOTE,  CH7, 1 } ,
+ { MIDI_NOTE,  CH7, 2 } , 
+ { MIDI_NOTE,  CH7, 3 } , 
+ { MIDI_NOTE,  CH7, 4 } , 
+ { MIDI_NOTE,  CH7, 5 } ,
+ { MIDI_NOTE,  CH7, 6 } , 
+ { MIDI_NOTE,  CH7, 7 } , 
+ { MIDI_NOTE,  CH7, 8 } , 
+ { MIDI_NOTE,  CH7, 9 } ,
+ { MIDI_NOTE,  CH7, 10 } , 
+ { MIDI_NOTE,  CH7, 11 } , 
+ { MIDI_NOTE,  CH7, 12 } , 
+ { MIDI_NOTE,  CH7, 13 } , 
+ { MIDI_NOTE,  CH7, 14 } , 
+ { MIDI_NOTE,  CH7, 15 } , 
+ { MIDI_NOTE,  CH7, 16 } , 
+ { MIDI_NOTE,  CH7, 17 } , 
+ { MIDI_NOTE,  CH7, 18 } , 
+ { MIDI_NOTE,  CH7, 19 } ,
+ { MIDI_NOTE,  CH7, 20 } , 
+ { MIDI_NOTE,  CH7, 21 } , 
+ { MIDI_NOTE,  CH7, 22 } , 
+ { MIDI_NOTE,  CH7, 23 } , 
+ { MIDI_NOTE,  CH7, 24 } , 
+ // Pedalboard 
+ { MIDI_NOTE,  CH8, 1 } , 
+ { MIDI_NOTE,  CH8, 2 } , 
+ { MIDI_NOTE,  CH8, 3 } , 
+ { MIDI_NOTE,  CH8, 4 } , 
+ { MIDI_NOTE,  CH8, 5 } ,
+ { MIDI_NOTE,  CH8, 6 } , 
+ { MIDI_NOTE,  CH8, 7 } , 
+ { MIDI_NOTE,  CH8, 8 } , 
+ { MIDI_NOTE,  CH8, 9 } ,
+ { MIDI_NOTE,  CH8, 10 } , 
+ { MIDI_NOTE,  CH8, 11 } , 
+ { MIDI_NOTE,  CH8, 12 } , 
+ { MIDI_NOTE,  CH8, 13 } , 
+ { MIDI_NOTE,  CH8, 14 } , 
+ { MIDI_NOTE,  CH8, 15 } , 
+ { MIDI_NOTE,  CH8, 16 } , 
+ { MIDI_NOTE,  CH8, 17 } , 
+ { MIDI_NOTE,  CH8, 18 } , 
+ { MIDI_NOTE,  CH8, 19 } ,
+ { MIDI_NOTE,  CH8, 20 } , 
+ { MIDI_NOTE,  CH8, 21 } , 
+ { MIDI_NOTE,  CH8, 22 } , 
+ { MIDI_NOTE,  CH8, 23 } , 
+ { MIDI_NOTE,  CH8, 24 } , 
 
 // { MIDI_NOTE_TOGGLE,  CH7, 56 } , // Should Fail
 
@@ -313,7 +325,7 @@ class myMidi : public USBMIDI {
    digitalWrite(LED_BUILTIN, LED_ON ); // Turn on LED briefly to indicate USB input
    int scanIndex = getChannelNoteIndex( channel, note ) ;
    if ( scanIndex >= 0 ) {
-     ScanImage[scanIndex].LastOutput = 0;
+     ScanImage[scanIndex].Output = 0;
    }
    delay(10); // DEBUG
    digitalWrite(LED_BUILTIN, LED_OFF );
@@ -322,7 +334,7 @@ class myMidi : public USBMIDI {
    digitalWrite(LED_BUILTIN, LED_ON ); // Turn on LED briefly to indicate USB input
    int scanIndex = getChannelNoteIndex( channel, note ) ;
    if ( scanIndex >= 0 ) {
-    ScanImage[scanIndex].LastOutput = velocity;
+    ScanImage[scanIndex].Output = velocity;
    }
    delay(20); // DEBUG
    digitalWrite(LED_BUILTIN, LED_OFF );
@@ -350,6 +362,7 @@ myMidi midi;
 USBHID HID;
 HIDKeyboard Keyboard(HID);
 USBMultiSerial<1> ms; // One multiserial object
+TM1637 TM; // 7 Segment display driver
 
 void setup() {   
     int i=0;
@@ -393,7 +406,7 @@ void setup() {
   }
   // Test Shift register driven LED background glow
   for ( int i = 0 ; i <  sizeof( MAX_SCANNED_GPIO  + SHIFT_REGISTER_BITS ) ; i++ ) {
-     ScanImage[ i ].LastOutput = 1 ;
+     ScanImage[ i ].Output = 1 ;
   }
   digitalWrite(LED_BUILTIN, LED_OFF ); // Exit with defined LED behaviour
 }
@@ -432,30 +445,42 @@ void IOScan (void ) {
       break;
       case IP_ADC :
       {
-        /* if ( ( time_now % 100 ) == 0 ) */ { // 100ms interval sampling for 50Hz/60Hz hum rejection
-         int new_value = analogRead( pin[gpioId].portPin ); // a value between 0-4095
-         // If difference between new_value and old_value is grater than threshold
-         if ( abs ( new_value - ScanImage[scanId].LastInput ) > threshold ) {
-          if ( ( time_now - ScanImage[scanId].LastTime ) > DEBOUNCE_TIME_MS ) {
-            ScanImage[scanId].LastInput = new_value;
-            ScanImage[scanId].LastTime  = time_now;
+        int ain = analogRead( pin[gpioId].portPin ); // a value between 0-4095
+        // Filter the adc input to get a stable result
+        ScanImage[scanId].Error += ain - ScanImage[scanId].Input;
+        const int SCALE_0_TO_127 = 32;  // Range 0-127. May need adjustment depending on swell pedal shoe geometry
+        if ( abs( ScanImage[scanId].Error ) > 2000 ) {
+          int prev_result = ScanImage[scanId].Input / SCALE_0_TO_127; // scale 0-4095 to 0-127 for midi cc command
+          ScanImage[scanId].Input += ( ain - ScanImage[scanId].Input ) / 2 ;//adjust input estimate by 50% of error
+          ScanImage[scanId].Error  = 0;
+          int  new_result = ScanImage[scanId].Input / SCALE_0_TO_127;
+          if( new_result != prev_result ) {
+            ScanImage[scanId].Time  = time_now;
             int midi_channel      = ScanParams[scanId].channel ;
             int cc_command_number = ScanParams[scanId].value;
             digitalWrite(LED_BUILTIN, LED_ON ); // Indicate USB signalling PCB LED
-            midi.sendControlChange(midi_channel,cc_command_number, new_value/32 ); // Range 0-127. May need adjustment depending on swell pedal shoe geometry
+            midi.sendControlChange(midi_channel,cc_command_number, new_result );
             delay(3); // DEBUG
             digitalWrite(LED_BUILTIN, LED_OFF );
+            TM.begin(PB8, PB9 , 6 );
+            TM.setBrightness(0);
+            char buff[20]; sprintf( buff,"A%d=%3d", cc_command_number -20 , new_result );
+            TM.displayPChar(buff);
           }
-         }
+        } else {
+           // reduce hunting especially around min and max values
+           int decay = SCALE_0_TO_127 / 4 ; // decay error by 0.25 of midi cc interval
+           if ( ScanImage[scanId].Error < 0 )
+             decay = -SCALE_0_TO_127 / 4 ;
+           ScanImage[scanId].Error -= decay;
         }
-        //adcId++;
         scanId++;
       }
       break;
       case IP_CONTACT :
       {
          int input = digitalRead( pin[gpioId].portPin );
-         if ( ScanImage[scanId].LastInput != input ){
+         if ( ScanImage[scanId].Input != input ){
            InputChange( scanId , input );
          }
       }
@@ -469,7 +494,7 @@ void IOScan (void ) {
           for ( int ip_id = 0 ; ip_id < NUM_GPIO_PINS ; ip_id++ ) {
             if ( pin[ip_id].func == IP_SCAN ) {
               int input  = digitalRead( pin[ip_id].portPin );              
-              if ( ScanImage[scanId].LastInput != input ) {
+              if ( ScanImage[scanId].Input != input ) {
                 InputChange( scanId, input );
               }
               scanId++;
@@ -509,17 +534,17 @@ void IOScan (void ) {
                digitalWrite( op_sr_clock, LOW );
                digitalWrite( op_sr_data , LOW ); // only required after 1st clock
                input = digitalRead( ip_sr_data );
-               if ( ScanImage[scanId+i].LastInput != input ){
+               if ( ScanImage[scanId+i].Input != input ){
                  change = scanId+i; // record change for later update to avoid SR LEDs blinking out during USB update
                  break;
                }
             }
             // load shift registers with LED status
-            digitalWrite( op_sr_data, ScanImage[ scanId + num_sr_clocks - 1 ].LastOutput ); // improve data delay before rising clock
+            digitalWrite( op_sr_data, ScanImage[ scanId + num_sr_clocks - 1 ].Output ); // improve data delay before rising clock
             for ( int i = 0 ; i <  num_sr_clocks ; i++ ) {
                digitalWrite( op_sr_clock, HIGH );
                digitalWrite( op_sr_clock, LOW );
-               digitalWrite( op_sr_data, ScanImage[ scanId + num_sr_clocks - i - 2 ].LastOutput );
+               digitalWrite( op_sr_data, ScanImage[ scanId + num_sr_clocks - i - 2 ].Output );
             }
             if ( change ) {
                  InputChange( change , input );
@@ -540,15 +565,15 @@ void IOScan (void ) {
 
 void InputChange( int scanId, int input ) {
   unsigned long time_now = millis();
-  if ( ( time_now - ScanImage[scanId].LastTime ) > DEBOUNCE_TIME_MS ) {
-    ScanImage[scanId].LastTime  = time_now;
-    ScanImage[scanId].LastInput = input;
+  if ( ( time_now - ScanImage[scanId].Time ) > DEBOUNCE_TIME_MS ) {
+    ScanImage[scanId].Time  = time_now;
+    ScanImage[scanId].Input = input;
     switch ( ScanParams[scanId].command ) {
       case MIDI_NOTE_TOGGLE:
         if ( input == 0 ) 
           return;
-        input = ! ScanImage[scanId].LastOutput ; 
-        ScanImage[scanId].LastOutput = input ;
+        input = ! ScanImage[scanId].Output ; 
+        ScanImage[scanId].Output = input ;
       case MIDI_NOTE:
         {    
           digitalWrite(LED_BUILTIN, LED_ON ); // Indicate USB signalling PCB LED ON
@@ -568,7 +593,7 @@ void InputChange( int scanId, int input ) {
           Keyboard.press  ( ScanParams[scanId].value );
           Keyboard.release( ScanParams[scanId].value ); // inhibit auto repeat
         } else {
-          if ( time_now - ScanImage[scanId].LastTime > 2000 ) { // Long press?
+          if ( time_now - ScanImage[scanId].Time > 2000 ) { // Long press?
              if ( ScanParams[scanId+1].command == HID_PAGE_TURNER ) {
               int long_press_command = ScanParams[scanId+1].value; // Simulate next switch contact
               Keyboard.press  ( long_press_command );
