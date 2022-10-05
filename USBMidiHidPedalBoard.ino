@@ -1,9 +1,9 @@
 #include <USBComposite.h> // https://github.com/arpruss/USBComposite_stm32f1
-#include "TM1637.h" // Must RJ enhancments for displayPChar(char *)
+#include "TM1637.h" // Must include RJ enhancments for displayPChar(char *) https://github.com/RobTillaart/TM1637_RT
 /*
  * USBMidiHidPedalBoard
  *
- * Copyright (C)2022 richard (dot) jones (dot ) 1952 ( art ) gmail (drat ) com
+ * Copyright (C)2022 richard (dot) jones (dot ) 1952 ( at ) gmail (dot ) com
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,7 +61,7 @@ Initial midi channel assignments are readily altered by editing constant arrays.
  * 4. Repeat step 3 until programming success
  * 5. Move Boot0 link to position 0
  * 6. Disconnect programmer
- * 7. OR Use a USB boot loader
+ * 7. OR install a USB boot loader
 ## Enhancements
 - Output drive for LEDs and displays possibly midi controlled may be needed
  ## Thanks
@@ -141,10 +141,10 @@ const int NUM_GPIO_PINS = sizeof(pin)/sizeof( pin[0] );
 
 enum Command { 
  NONE = 0 , 
- MIDI_NOTE, // Midi/note on, Midi note off command == 0x80
- MIDI_NOTE_TOGGLE,
- MIDI_CC, // midi control change messages sent by adc
- MIDI_PC, // Unused for now
+ MIDI_NOTE_TOGGLE=0x80,
+ MIDI_NOTE=0x90, // Midi/note on=0x90, Midi note off command == 0x80
+ MIDI_CC=0xB0, // midi control change messages sent by adc
+ MIDI_PC=0xC0, // program change
  HID_PAGE_TURNER
  };
 
@@ -320,10 +320,12 @@ const struct ScanAssociations ScanParams [ TOTAL_INPUTS ] = {
 
  };
 
+TM1637 TM; // 7 Segment display driver
+
 class myMidi : public USBMIDI {
  virtual void handleNoteOff(unsigned int channel, unsigned int note, unsigned int velocity) {
    digitalWrite(LED_BUILTIN, LED_ON ); // Turn on LED briefly to indicate USB input
-   int scanIndex = getChannelNoteIndex( channel, note ) ;
+   int scanIndex = getChannelNoteIndex( MIDI_NOTE, channel, note ) ;
    if ( scanIndex >= 0 ) {
      ScanImage[scanIndex].Output = 0;
    }
@@ -332,27 +334,45 @@ class myMidi : public USBMIDI {
  }
  virtual void handleNoteOn( unsigned int channel, unsigned int note, unsigned int velocity ) {
    digitalWrite(LED_BUILTIN, LED_ON ); // Turn on LED briefly to indicate USB input
-   int scanIndex = getChannelNoteIndex( channel, note ) ;
+   int scanIndex = getChannelNoteIndex( MIDI_NOTE, channel, note ) ;
    if ( scanIndex >= 0 ) {
     ScanImage[scanIndex].Output = velocity;
    }
    delay(20); // DEBUG
    digitalWrite(LED_BUILTIN, LED_OFF );
  }
- int getChannelNoteIndex( unsigned int channel, unsigned int note ) {
+ virtual void handleControlChange( unsigned int channel, unsigned int controller, unsigned int velocity ) {
+   digitalWrite(LED_BUILTIN, LED_ON ); // Turn on LED briefly to indicate USB input
+   int scanIndex = getChannelNoteIndex( MIDI_CC, channel, controller ) ;
+   if ( scanIndex >= 0 ) {
+    ScanImage[scanIndex].Output = velocity;
+    char buff[20];
+    sprintf(buff,"c%2d=%02X",controller,velocity);
+    TM.displayPChar(buff);
+   }
+   delay(20); // DEBUG
+   digitalWrite(LED_BUILTIN, LED_OFF );
+ }
+
+ int getChannelNoteIndex( unsigned int command, unsigned int channel, unsigned int note ) {
      for ( int i = 0 ; i < TOTAL_INPUTS; i++ ) {
        switch ( ScanParams[i].command ) {
+        case MIDI_NOTE_TOGGLE :
         case MIDI_NOTE :
           if ( ScanParams[i].channel == channel )
             if ( ScanParams[i].value == note )
               return i;
         break;
-        case MIDI_NOTE_TOGGLE :
           if ( ScanParams[i].channel == channel )
             if ( ScanParams[i].value == note )
               return i;
         break;
+        case MIDI_CC :
+          if ( ScanParams[i].channel == channel )
+            if ( ScanParams[i].value == note )
+              return i;        
        }
+              
      }
      return -1 ;
  }
@@ -362,7 +382,7 @@ myMidi midi;
 USBHID HID;
 HIDKeyboard Keyboard(HID);
 USBMultiSerial<1> ms; // One multiserial object
-TM1637 TM; // 7 Segment display driver
+//TM1637 TM; // 7 Segment display driver
 
 void setup() {   
     int i=0;
