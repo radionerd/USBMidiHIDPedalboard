@@ -400,6 +400,8 @@ void setup() {
     pinMode ( LED_BUILTIN, OUTPUT );      
     while (!USBComposite) digitalWrite(LED_BUILTIN, ++i&1); // Super fast flash while waiting for USB to register
     Keyboard.begin(); // useful to detect host capslock state and LEDs
+    delay(5000);
+    ms.ports[0].write("Start\n");
 
     // afio_cfg_debug_ports(AFIO_DEBUG_NONE); // Remove leading comment to Allow application use of PB3, PA14
     digitalWrite(LED_BUILTIN, LED_ON );
@@ -484,8 +486,9 @@ void IOScan (void ) {
             digitalWrite(LED_BUILTIN, LED_OFF );
             TM.begin(PB8, PB9 , 6 );
             TM.setBrightness(0);
-            char buff[20]; sprintf( buff,"A%d=%3d", cc_command_number -20 , new_result );
+            char buff[20]; sprintf( buff,"A%d=%3d\n", cc_command_number -20 , new_result );
             TM.displayPChar(buff);
+            ms.ports[0].write(buff);
           }
         } else {
            // reduce hunting especially around min and max values
